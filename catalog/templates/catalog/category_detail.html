@@ -1,0 +1,24 @@
+{% extends 'catalog/base.html' %}
+{% load media_tag %}
+{% block content %}
+
+      <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <table class="table">
+                    <tr>
+                        <td>Название продукта</td>
+                        <td>{{ object.name }} </td>
+                    </tr>
+                    <tr>
+                        <td>Описание продукта</td>
+                        <td>{{ object.description }}</td>
+                    </tr>
+                    <img src="{% media_tag object.image %}" alt="Изображение"  width="150" height="150"/>
+                </table>
+            </div>
+            <div class="card-footer">
+            </div>
+        </div>
+    </div>
+{% endblock %}

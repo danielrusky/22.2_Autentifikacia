@@ -1,0 +1,4 @@
+{% autoescape off %}
+Для подтверждения почтового адреса перейдите по ссылке:
+http://{{ domain }}{% url 'users:activate' key %}
+{% endautoescape %}
