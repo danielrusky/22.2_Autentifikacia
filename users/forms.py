@@ -20,3 +20,7 @@ class UserProfileForm(UserChangeForm):
             self.fields['password'].widget = forms.HiddenInput()
 
 
+class PasswordResetForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['email']

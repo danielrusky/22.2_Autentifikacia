@@ -1,4 +1,3 @@
-
 <div class="col-sm-4 offset-md-1 py-4">
     <h4 class="text-white">Меню</h4>
     <ul class="list-unstyled">
@@ -8,10 +7,16 @@
         <li><a href="{% url 'catalog:category_list' %}" class="text-white">Категории</a></li>
         {% if user.is_authenticated %}
             <li><a href="{% url 'users:profile' %}" class="text-white">Профиль</a></li>
+        {% if not user.is_superuser %}
+        {% if not user.email_is_confirmed %}
+            <li class="list-inline-item text-danger">не подтвержден</li>
+        {% endif %}
+        {% endif %}
             <li><a href="{% url 'users:logout' %}" class="text-white">Выйти</a></li>
         {% else %}
             <li><a href="{% url 'users:login' %}" class="text-white">Войти</a></li>
             <li><a href="{% url 'users:register' %}" class="text-white">Регистрация</a></li>
         {% endif %}
+
     </ul>
 </div>

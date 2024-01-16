@@ -1,0 +1,9 @@
+{% extends 'catalog/base.html' %}
+
+{% block content %}
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Электронная почта не подтверждена</h4>
+        <p>Ваш адрес электронной почты не подтвержден!</p>
+        <p><a href="{% url 'users:register' %}">Перейти на форму регистрации</a></p>
+    </div>
+{% endblock %}
