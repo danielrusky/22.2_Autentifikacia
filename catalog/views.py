@@ -3,8 +3,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.views.generic import DetailView, CreateView, TemplateView, ListView, UpdateView, DeleteView
 
-from catalog.forms import ProductForm, CategoryForm, VersionForm
-from catalog.models import Product, Category, Contact, Version
+from catalog.forms import ProductForm, CategoryForm, VersionForm, VersionCategoryForm
+from catalog.models import Product, Category, Contacts, Version, VersionCategory
 
 
 class ProductListView(ListView):
@@ -12,7 +12,14 @@ class ProductListView(ListView):
     extra_context = {
         'title': 'Главная страница',
     }
-    template_name = 'catalog/index.html'
+    template_name = 'catalog/product_list.html'
+
+    def get_queryset(self, *args, **kwargs):
+        # QuerySet — это набор объектов из базы данных, который
+        # может использовать фильтры для ограничения результатов
+        queryset = super().get_queryset(*args, **kwargs)
+        queryset = queryset.filter(is_active=True)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -20,30 +27,22 @@ class ProductListView(ListView):
         return context
 
 
-class ContactsView(TemplateView):
-    template_name = 'catalog/contacts.html'
-    extra_context = {
-        'title': 'Контакты',
-    }
-
-    def post(self, request, *args, **kwargs):
-        name = request.POST.get('name')
-        phone = request.POST.get('phone')
-        message = request.POST.get('message')
-        print(f'name: {name}, phone: {phone}, message: {message}')
-        return render(request, 'catalog/contacts.html', self.extra_context)
-
-
 class ProductCreateView(CreateView):
     model = Product
     form_class = ProductForm
+    success_url = reverse_lazy('catalog:list_product')
 
-    def get_success_url(self):
-        return reverse_lazy('catalog:base', kwargs={'pk': self.object.pk})
+    # def get_success_url(self):
+    #     return reverse_lazy('catalog:list_product', kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
+        # проверка валидации (только create и update)
+        # создаем форму, но не отправляем его в БД, пока просто держим в памяти
+        # создаем переменную, сохраням и с ней работаем
+        # Через реквест передаем недостающую форму, которая обязательна
+        # сохраняем в базу данных
         self.object = form.save()
-        self.object.owner = self.request.user
+        self.object.user = self.request.user
         self.object.save()
         return super().form_valid(form)
 
@@ -59,9 +58,10 @@ class ProductDetailView(DetailView):
 class ProductUpdateView(UpdateView):
     model = Product
     form_class = ProductForm
+    success_url = reverse_lazy('catalog:list_product')
 
-    def get_success_url(self):
-        return reverse_lazy('product', kwargs={'pk': self.object.pk})
+    # def get_success_url(self):
+    #     return reverse_lazy('product', kwargs={'pk': self.object.pk})
 
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
@@ -84,57 +84,27 @@ class ProductUpdateView(UpdateView):
 
 class ProductDeleteView(DeleteView):
     model = Product
+    success_url = reverse_lazy('catalog:list_product')
 
-    def get_success_url(self):
-        return reverse_lazy('catalog:base', kwargs={'pk': self.object.pk})
+    # def get_success_url(self):
+    #     return reverse_lazy('catalog:base', kwargs={'pk': self.object.pk})
 
-    def toggle_active(request, slug):
-        catalog = get_object_or_404(Category, slug=slug)
-        if catalog.to_publish:
-            catalog.to_publish = False
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        if self.request.accepts('text/html'):
+            return response
         else:
-            catalog.to_publish = True
-        catalog.save()
-        return redirect('catalog:index', slug=catalog.slug)
+            return super().form_valid(form.errors)
 
 
-class CategoryCreateView(CreateView):
-    model = Category
-    form_class = CategoryForm
-
-    def get_success_url(self):
-        return reverse_lazy('catalog:index', kwargs={'pk': self.object.pk})
-
-
-def product(request, pk):
-    return render(request, 'catalog/product_list.html', {'product': Product.objects.get(pk=pk)})
-
-
-def create_category(request):
-    if request.method == 'POST':
-        category_name = request.POST.get('category_name')
-        category_desc = request.POST.get('category_desc')
-        Category.objects.create(name=category_name, description=category_desc)
-        return redirect('index')
-    return render(request, 'catalog/category_create.html')
-
-
-def create_product(request):
-    if request.method == 'POST':
-        product_category = request.POST.get('product_category')
-        name = request.POST.get('product_name')
-        price = request.POST.get('product_price')
-        description = request.POST.get('prod_desc')
-        image = request.FILES.get('prod_image')
-        Product.objects.create(name=name, description=description, price=price,
-                               image=image, category=Category.objects.get(id=product_category))
-        print(f"Данные:\n"
-              f"Название: {name}\n"
-              f"Описание: {description}\n"
-              f"Цена: {price}\n"
-              f"Фото: {image}\n"
-              f"Категория: {product_category}")
-    return render(request, 'catalog/product_create.html', {'categories': Category.objects.all()})
+def toggle_active(request, slug):
+    products = get_object_or_404(Product, slug=slug)
+    if products.to_publish:
+        products.to_publish = False
+    else:
+        products.to_publish = True
+    products.save()
+    return redirect('catalog:base', slug=products.slug)
 
 
 class CategoryListView(ListView):
@@ -151,14 +121,13 @@ class CategoryListView(ListView):
         return context
 
 
-class CategoryView(ListView):
-    model = Product
-    template_name = 'category_products.html'
-    context_object_name = 'products'
+class CategoryCreateView(CreateView):
+    model = Category
+    form_class = CategoryForm
+    success_url = reverse_lazy('catalog:list_category')
 
-    def get_queryset(self):
-        category = Category.objects.get(pk=self.kwargs['pk'])
-        return Product.objects.filter(category=category)
+    # def get_success_url(self):
+    #     return reverse_lazy('catalog:category_list', kwargs={'pk': self.object.pk})
 
 
 class CategoryDetailView(DetailView):
@@ -172,9 +141,7 @@ class CategoryDetailView(DetailView):
 class CategoryUpdateView(UpdateView):
     model = Category
     form_class = CategoryForm
-
-    def get_success_url(self):
-        return reverse_lazy('catalog:category_list', kwargs={'pk': self.object.pk})
+    success_url = reverse_lazy('catalog:list_category')
 
     def form_valid(self, form):
         formset = self.get_context_data()['formset']
@@ -184,12 +151,48 @@ class CategoryUpdateView(UpdateView):
             formset.save()
         return super().form_valid(form)
 
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        VersionCategoryFormset = inlineformset_factory(Category, VersionCategory, form=VersionCategoryForm, extra=1)
+        if self.request.method == 'POST':
+            context_data['formset'] = VersionCategoryFormset(self.request.POST, instance=self.object)
+        else:
+            context_data['formset'] = VersionCategoryFormset(instance=self.object)
+
+        return context_data
+
 
 class CategoryDeleteView(DeleteView):
     model = Category
+    success_url = reverse_lazy('catalog:list_category')
 
-    def get_success_url(self):
-        return reverse_lazy('catalog:category_list', kwargs={'pk': self.object.pk})
+    # def get_success_url(self):
+    #     return reverse_lazy('catalog:list_category', kwargs={'pk': self.object.pk})
 
     def test_func(self):
         return self.request.user.is_superuser
+
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        if self.request.accepts('text/html'):
+            return response
+        else:
+            return super().form_valid(form.errors)
+
+
+class ContactsView(TemplateView):
+    template_name = 'catalog/contacts.html'
+    extra_context = {
+        'title': 'Контакты',
+    }
+
+    def post(self, request, *args, **kwargs):
+        # POST — это запрос, который используется для отправки данных
+        # на сервер. Обычно он содержит в своём теле данные, которые
+        # предполагается сохранить
+        name = request.POST.get('name')
+        phone = request.POST.get('phone')
+        message = request.POST.get('message')
+        print(f'name: {name}, phone: {phone}, message: {message}')
+        return render(request, 'catalog/contacts.html', self.extra_context, {'contacts': Contacts.objects.get(pk=1)})
+

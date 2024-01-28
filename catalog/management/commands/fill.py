@@ -1,6 +1,6 @@
 import json
 
-from catalog.models import Category, Product, Contact
+from catalog.models import Category, Product
 
 from django.core.management import BaseCommand
 
@@ -9,7 +9,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         Category.objects.all().delete()
         Product.objects.all().delete()
-        Contact.objects.all().delete()
 
         with open('./catalog.json', 'r') as f:
             the_list = json.loads(f.read())

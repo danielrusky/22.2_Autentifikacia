@@ -1,55 +1,48 @@
 {% extends 'catalog/base.html' %}
-{% block content%}
+{% block content %}
 
 <div class="col-12">
-    <form class="row" method="post">
+    <form class="row" method="post" enctype="multipart/form-data">
         <div class="col-6">
-            <div class='card'>
+            <div class="card">
                 <div class="card-header">
                     <h4 class="card-title">
-                        Категории
-                    </h4>
-                </div>
-                <div class='col-6 mb-4'>
-                    <div class="card">
-                        <div class="card-body">
-                            {%csrf_token%}
-                            {{ form.as_p }}
-                            <button type="submit" class="btn btn-success">
-                                {% if object %}
-                                Сохранить
-                                {% else %}
-                                Создать
-                                {% endif %}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 mb-4">
-            <div class='card'>
-
-                <div class="card-header">
-                    <h4 class="card-title">
-                        Товары
+                        Создать категрию
                     </h4>
                 </div>
                 <div class="card-body">
-                    {%csrf_token%}
+                    {% csrf_token %}
                     {{ form.as_p }}
+                    <button type="submit" class="btn btn-success">
+                        {% if object %}
+                        Сохранить
+                        {% else %}
+                        Создать
+                        {% endif %}
+                    </button>
+                    <a href="{% url 'catalog:list_category' %}" class="btn btn-primary">К списку товаров</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        Версия продукта
+                    </h4>
+                </div>
+                <div class="card-body">
                     {{ formset.management_form }}
                     {% for form in formset.forms %}
-                    {{ form.as_p }}
+                        {{ form.as_p }}
                     {% if not forloop.last %}
                     <hr>
                     {% endif %}
                     {% endfor %}
+                    <a href="{% url 'catalog:list_category' %}" class="btn btn-primary">К списку товаров</a>
                 </div>
-
             </div>
         </div>
     </form>
 </div>
-
 {% endblock %}

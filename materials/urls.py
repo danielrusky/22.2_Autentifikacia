@@ -8,10 +8,10 @@ from materials.views import MaterialCreateView, MaterialListView, MaterialDetail
 app_name = MaterialsConfig.name
 
 urlpatterns = [
-    path('create/', MaterialCreateView.as_view(), name='create'),
-    path('', MaterialListView.as_view(), name='list'),
-    path('view/<int:pk>/', MaterialDetailView.as_view(), name='view'),
-    path('edit/<int:pk>/', MaterialUpdateView.as_view(), name='edit'),
-    path('delete/<int:pk>/', MaterialDeleteView.as_view(), name='delete'),
+    path('', MaterialListView.as_view(), name='list_material'),
+    path('create_material/', MaterialCreateView.as_view(), name='create_material'),
+    path('view_material/<int:pk>/', MaterialDetailView.as_view(), name='view_material'),
+    path('edit_material/<int:pk>/', MaterialUpdateView.as_view(), name='edit_material'),
+    path('delete_material/<int:pk>/', MaterialDeleteView.as_view(), name='delete_material'),
     path('to_published/<slug>', toggle_active, name='toggle_active')
 ]
