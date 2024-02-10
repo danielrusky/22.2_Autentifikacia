@@ -69,7 +69,7 @@ class VersionCategory(models.Model):
 
 class Contacts(models.Model):
     name = models.CharField(max_length=100, verbose_name='name')
-    phone = models.IntegerField(unique=True, null=False, blank=False)
+    phone = models.CharField(unique=True, null=False, blank=False)
     message = models.TextField(verbose_name='message')
 
     def __str__(self):

@@ -184,6 +184,7 @@ class ContactsView(TemplateView):
     template_name = 'catalog/contacts.html'
     extra_context = {
         'title': 'Контакты',
+        'contacts': Contacts.objects.get(name='Данила'),
     }
 
     def post(self, request, *args, **kwargs):
