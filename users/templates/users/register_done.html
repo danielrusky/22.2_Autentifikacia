@@ -1,0 +1,9 @@
+{% extends 'catalog/base.html' %}
+
+{% block content %}
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Добро пожаловать!</h4>
+        <p>Вы успешно зарегистрирваны на сайте! Для входа в систему необходимо авторизоваться по этой
+            <a href="{% url 'users:login' %}">ссылке</a></p>
+    </div>
+{% endblock %}
